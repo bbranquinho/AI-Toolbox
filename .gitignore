@@ -20,7 +20,10 @@ AI-Toolbox/test/CMakeFiles/
 AI-Toolbox/test/CTestTestfile.cmake
 AI-Toolbox/test/Makefile
 AI-Toolbox/test/cmake_install.cmake
-CMakeCache.txt
-CMakeFiles/
-Makefile
-cmake_install.cmake
+wpattern-ai-toolbox/CMakeCache.txt
+wpattern-ai-toolbox/CMakeFiles/
+wpattern-ai-toolbox/Makefile
+wpattern-ai-toolbox/cmake_install.cmake
+wpattern-ai-toolbox/.kdev4/
+wpattern-ai-toolbox/pbvi
+wpattern-ai-toolbox/wpattern-ai-toolbox.kdev4
