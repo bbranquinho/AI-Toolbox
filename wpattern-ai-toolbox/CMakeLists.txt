@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.6)
-project(lp)
+project(wpattern-ai-toolbox)
 
 ADD_DEFINITIONS(
     -std=c++11 # Or -std=c++0x
