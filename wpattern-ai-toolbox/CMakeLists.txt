@@ -10,10 +10,7 @@ ADD_DEFINITIONS(
 
 INCLUDE_DIRECTORIES("/usr/include" )
 
-add_executable(pbvi PBVIExample.cpp)
+add_executable(pbvi main.cpp)
 target_link_libraries(pbvi /usr/lib/lp_solve/liblpsolve55.so /home/branquinho/development/programs/AI-Toolbox/libAIToolboxPOMDP.a /home/branquinho/development/programs/AI-Toolbox/libAIToolboxMDP.a)
-
-add_executable(perseus PerseusExample.cpp)
-target_link_libraries(perseus /usr/lib/lp_solve/liblpsolve55.so /home/branquinho/development/programs/AI-Toolbox/libAIToolboxPOMDP.a /home/branquinho/development/programs/AI-Toolbox/libAIToolboxMDP.a)
 
 install(TARGETS pbvi RUNTIME DESTINATION bin)
