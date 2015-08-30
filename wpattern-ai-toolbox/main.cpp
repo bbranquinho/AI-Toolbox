@@ -2,32 +2,26 @@
 
 #include <boost/program_options.hpp>
 
-namespace po = boost::program_options;
+using namespace boost::program_options;
 using namespace std;
 
 int main(int argc, char **argv) {
-    cout << "Hello, world!" << endl;
-    
     // Declare the supported options.
-    po::options_description desc("Allowed options");
+    options_description desc("Allowed options");
     desc.add_options()
-	("help", "produce help message")
-	("compression", po::value<int>(), "set compression level");
+      ("help", "Display this help message and exit.")
+      ("output", value<string>(), "Use policyFileName as the name of policy output file. The file name is 'out.policy' by default.");
 
-    po::variables_map vm;
-    po::store(po::parse_command_line(argc, argv, desc), vm);
-    po::notify(vm);    
+    variables_map vm;
+    store(parse_command_line(argc, argv, desc), vm);
+    notify(vm);    
 
     if (vm.count("help")) {
 	cout << desc << "\n";
 	return 1;
     }
 
-    if (vm.count("compression")) {
-	cout << "Compression level was set to " << vm["compression"].as<int>() << ".\n";
-    } else {
-	cout << "Compression level was not set.\n";
-    }
+    
     
     return 0;
 }
