@@ -12,8 +12,14 @@ INCLUDE_DIRECTORIES("/usr/include")
 
 # Boost configuration.
 FIND_PACKAGE( Boost 1.53 COMPONENTS program_options REQUIRED )
-INCLUDE_DIRECTORIES( ${Boost_INCLUDE_DIR} )
+INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
 SET(CMAKE_CXX_FLAGS "-lboost_program_options")
 
-INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/include)
-ADD_SUBDIRECTORY(${PROJECT_SOURCE_DIR}/src)
+add_executable(wpattern-ai-toolbox main.cpp)
+
+target_link_libraries(wpattern-ai-toolbox
+  ${Boost_LIBRARY_DIRS}/libboost_program_options.a
+  /home/branquinho/development/sources/git/AI-Toolbox/AI-Toolbox/libAIToolboxPOMDP.a
+  /home/branquinho/development/sources/git/AI-Toolbox/AI-Toolbox/libAIToolboxMDP.a)
+
+install(TARGETS wpattern-ai-toolbox RUNTIME DESTINATION bin)
