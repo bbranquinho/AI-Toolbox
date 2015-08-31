@@ -30,6 +30,14 @@ namespace AIToolbox {
             if ( d <= 0.0 || d > 1.0 ) throw std::invalid_argument("Discount parameter must be in (0,1]");
             discount_ = d;
         }
+        
+        void Model::setStates(std::vector<std::string> states) {
+	  states_ = states;
+	}
+	
+	std::vector< std::string > AIToolbox::MDP::Model::getStates() {
+	  return states_;
+	}
 
         bool Model::isTerminal(size_t s) const {
             bool answer = true;

@@ -3,7 +3,7 @@
 
 discount: 0.25
 values: reward
-states: tiger-left tiger-right 
+states: tiger-left tiger-right
 actions: listen open-left open-right
 observations: tiger-left tiger-right
 
@@ -35,4 +35,3 @@ R:open-left : tiger-right : * : * 1
 R:open-right : tiger-left : * : * 1
 
 R:open-right : tiger-right : * : * -10
-

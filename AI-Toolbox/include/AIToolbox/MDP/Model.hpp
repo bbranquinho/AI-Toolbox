@@ -3,6 +3,7 @@
 
 #include <utility>
 #include <random>
+#include <iostream>
 
 #include <AIToolbox/Types.hpp>
 #include <AIToolbox/MDP/Types.hpp>
@@ -191,6 +192,13 @@ namespace AIToolbox {
                  * @param d The new discount factor for the Model.
                  */
                 void setDiscount(double d);
+		
+		/**
+		 * @brief List with names of the states.
+		 * 
+		 * @param states List os states.
+		 */
+		void setStates(std::vector<std::string> states);
 
                 /**
                  * @brief This function samples the MDP for the specified state action pair.
@@ -287,6 +295,13 @@ namespace AIToolbox {
                  */
                 const Matrix2D & getRewardFunction(size_t a) const;
 
+		/**
+		 * @brief List of states.
+		 * 
+		 * @return List os states.
+		 */
+		std::vector<std::string> getStates();
+		
                 /**
                  * @brief This function returns whether a given state is a terminal.
                  *
@@ -299,6 +314,7 @@ namespace AIToolbox {
             private:
                 size_t S, A;
                 double discount_;
+		std::vector<std::string> states_;
 
                 TransitionTable transitions_;
                 RewardTable rewards_;

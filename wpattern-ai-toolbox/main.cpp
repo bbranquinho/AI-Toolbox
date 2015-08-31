@@ -13,6 +13,7 @@ using namespace std;
 
 using namespace boost;
 using namespace boost::program_options;
+using namespace boost::algorithm;
 
 using namespace AIToolbox;
 
@@ -27,6 +28,10 @@ static map<string, ALGORITHM_TYPE> mapAlgorithmTypes {
 // Methods declaration.
 POMDP::Model<MDP::Model> loadModel(string pomdpFile);
 bool processCommandLine(int argc, char** argv, string& algorithm, string& pomdpFile, string& outputFile);
+vector<string> parseToken(string line);
+double **buildUniformMatrix(int numLines, int numCols);
+double **buildIndetityMatrix(int numLines, int numCols);
+int indexOf(vector<string> values, string value);
 void solvePomdp(string algorithm, string pomdpFile, string outputFile);
 
 /**
@@ -45,28 +50,98 @@ int main(int argc, char **argv) {
 
 
 POMDP::Model<MDP::Model> loadModel(string pomdpFile) {
-    size_t S = 2, A = 3, O = 2;
-
-    POMDP::Model<MDP::Model> model(O, S, A);
-
-    string line;
     ifstream textFile(pomdpFile);
-    
+    char_separator<char> sep(":");
+    string token, line;
+    vector<string> states, actions, observations;
+    double discount;
+    Table3D *transitionsProbabilities, *observationsProbabilities, *rewards;
+
     if (textFile.is_open()) {
       while (getline(textFile,line)) {
-	typedef tokenizer<boost::char_separator<char>> tokenizer;
-	char_separator<char> sep(":");
-	tokenizer tokens(line, sep);
-	tokenizer::iterator tok_iter = tokens.begin();
+	trim(line);
 	
-	if (tok_iter != tokens.end()) {
-	  string headerStr = *tok_iter;
+	if ((line.size() > 0) && (line[0] != '#')) {
+	  typedef tokenizer<boost::char_separator<char>> tokenizer;
+	  tokenizer tokens(line, sep);
+	  tokenizer::iterator tok_iter = tokens.begin();
 	  
-	  for (; tok_iter != tokens.end(); ++tok_iter) {
-	    cout << *tok_iter << endl;
+	  if (tok_iter != tokens.end()) {
+	    token = to_lower_copy<string>(*tok_iter);
+	    trim(token);
+	    
+	    if (token.compare("discount") == 0) {
+	      token = *++tok_iter;
+	      
+	      if (tok_iter != tokens.end()) {
+		discount = stod(token);
+	      }
+	    }
+	    
+	    if (token.compare("values") == 0) {
+	      // Do nothing.
+	    }
+	    
+	    if (token.compare("states") == 0) {
+	      states = parseToken(*++tok_iter);
+	    }
+	    
+	    if (token.compare("actions") == 0) {
+	      actions = parseToken(*++tok_iter);
+	    }
+	    
+	    if (token.compare("observations") == 0) {
+	      observations = parseToken(*++tok_iter);
+	    }
+	    
+	    if (token.compare("t") == 0) {
+	      int numStates = states.size(), numActions = actions.size();
+	      string actionValue = *++tok_iter;
+	      
+	      transitionsProbabilities = new Table3D(extents[numStates][numActions][numStates]);
+	      
+	      int actionIndex = indexOf(actions, actionValue);
+	      
+	      if ((actionIndex < 0) || (actionIndex >= numActions)) {
+		throw std::invalid_argument("Action [" + actionValue + "] not mapped.");
+	      }
+	      
+	      if (!getline(textFile,line)) {
+		throw std::invalid_argument("Transitions not available.");
+	      }
+	      
+	      trim(line);
+	      line = to_lower_copy<string>(line);
+	      double **matrix;
+	      
+	      if (line.compare("uniform") == 0) {
+		matrix = buildUniformMatrix(numStates, numStates);
+	      } else if (line.compare("identity") == 0) {
+		matrix = buildIndetityMatrix(numStates, numStates);
+	      } else {
+		
+	      }
+	      
+	      for (int i = 0; i < numStates; i++) {
+		for (int j = 0; j < numStates; j++) {
+		  //transitionsProbabilities[i][actionIndex][j] = 0.0;// matrix[i][j];
+		}
+	      }
+	      
+	      delete matrix;
+	    }
+	    
+	    if (token.compare("o") == 0) {
+	      observationsProbabilities = new Table3D(extents[states.size()][actions.size()][observations.size()]);
+	      
+	    }
+	    
+	    if (token.compare("r") == 0) {
+	      rewards = new Table3D(extents[states.size()][actions.size()][states.size()]);
+	      
+	    }
 	  }
 	}
-	cout << "\n";
       }
       textFile.close();
     } else {
@@ -74,9 +149,79 @@ POMDP::Model<MDP::Model> loadModel(string pomdpFile) {
       exit(1);
     }
     
+    POMDP::Model<MDP::Model> model(observations.size(), states.size(), actions.size());
+    
+    model.setDiscount(discount);
+    model.setTransitionFunction(*transitionsProbabilities);
+    model.setObservationFunction(*observationsProbabilities);
+    model.setRewardFunction(*rewards);
+    
+    delete transitionsProbabilities;
+    delete observationsProbabilities;
+    delete rewards;
+    
     return model;
 }
 
+double **buildUniformMatrix(int numLines, int numCols) {
+  double **matrix;
+  
+  matrix = new double*[numLines];
+  
+  for (size_t i = 0; i < numLines; i++) {
+    matrix[i] = new double[numCols];
+    for (size_t j = 0; j < numCols; j++) {
+      matrix[i][j] = 1.0 / numCols;
+    }
+  }
+  
+  return matrix;
+}
+
+double **buildIndetityMatrix(int numLines, int numCols) {
+  double **matrix;
+  
+  matrix = new double*[numLines];
+  
+  for (size_t i = 0; i < numLines; i++) {
+    matrix[i] = new double[numCols];
+    for (size_t j = 0; j < numCols; j++) {
+      matrix[i][j] = (i == j) ? 1.0 : 0.0;
+    }
+  }
+  
+  return matrix;
+}
+
+int indexOf(vector<string> values, string value) {
+  value = to_lower_copy<string>(value);
+  
+  for (size_t i = 0; i < values.size(); i++) {
+    if (values[i].compare(value) == 0) {
+      return i;
+    }
+  }
+  
+  return -1;
+}
+
+vector<string> parseToken(string token) {
+  vector<string> states;
+  string value;
+  
+  char_separator<char> sep(" ");
+  typedef tokenizer<boost::char_separator<char>> tokenizer;
+  tokenizer tokens(token, sep);
+  tokenizer::iterator tok_iter = tokens.begin();
+  
+  for (tok_iter = tokens.begin(); tok_iter != tokens.end(); tok_iter++) {
+    value = to_lower_copy<string>(*tok_iter);
+    trim<string>(value);
+    states.push_back(value);
+  }
+  
+  return states;
+}
 
 bool processCommandLine(int argc, char** argv, string& algorithm, string& pomdpFile, string& outputFile) {
   // Declare the supported options.
