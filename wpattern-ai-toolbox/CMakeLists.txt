@@ -19,7 +19,8 @@ add_executable(wpattern-ai-toolbox main.cpp)
 
 target_link_libraries(wpattern-ai-toolbox
   ${Boost_LIBRARY_DIRS}/libboost_program_options.a
-  /home/branquinho/development/sources/git/AI-Toolbox/AI-Toolbox/libAIToolboxPOMDP.a
-  /home/branquinho/development/sources/git/AI-Toolbox/AI-Toolbox/libAIToolboxMDP.a)
+  /usr/lib/lp_solve/liblpsolve55.so
+  /home/branquinho/development/programs/AI-Toolbox/libAIToolboxPOMDP.a
+  /home/branquinho/development/programs/AI-Toolbox/libAIToolboxMDP.a)
 
 install(TARGETS wpattern-ai-toolbox RUNTIME DESTINATION bin)
