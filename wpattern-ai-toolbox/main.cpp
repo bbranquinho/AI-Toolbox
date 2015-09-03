@@ -83,7 +83,7 @@ void solvePomdp(string algorithm, string pomdpFile, string outputFile) {
 	  for ( long k = 0; k < values.rows(); k++ ) {
 	    outputStream << values.coeff(k, j) << " ";
 	  }
-	  outputStream << endl << endl;
+	  outputStream << endl;
 	}
 	outputStream << endl;
       }
