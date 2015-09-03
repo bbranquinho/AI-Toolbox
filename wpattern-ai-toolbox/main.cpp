@@ -29,10 +29,11 @@ static map<string, ALGORITHM_TYPE> mapAlgorithmTypes {
 POMDP::Model<MDP::Model> loadModel(string pomdpFile);
 bool processCommandLine(int argc, char** argv, string& algorithm, string& pomdpFile, string& outputFile);
 vector<string> parseToken(string line);
-double **buildMatrix(int numStates, string firstData, ifstream& textFile);
+double **buildMatrix(int numLines, int numCols, string firstData, ifstream& textFile);
 double **buildUniformMatrix(int numLines, int numCols);
 double **buildIndetityMatrix(int numLines, int numCols);
 int indexOf(vector<string> values, string value);
+vector<int> indexesOf(vector<string> values, string value, int num);
 void solvePomdp(string algorithm, string pomdpFile, string outputFile);
 vector<int> retrieveIndexes(string token, vector<string> names);
 double retrieveValue(string token);
@@ -165,7 +166,6 @@ POMDP::Model<MDP::Model> loadModel(string pomdpFile) {
 	    
 	    if (token.compare("t") == 0) {
 	      int numStates = states.size(), numActions = actions.size();
-	      
 	      int actionIndex = indexOf(actions, *++tok_iter);
 	      
 	      if ((actionIndex < 0) || (actionIndex >= numActions)) {
@@ -185,7 +185,7 @@ POMDP::Model<MDP::Model> loadModel(string pomdpFile) {
 	      } else if (line.compare("identity") == 0) {
 		matrix = buildIndetityMatrix(numStates, numStates);
 	      } else {
-		matrix = buildMatrix(numStates, line, textFile2);
+		matrix = buildMatrix(numStates, numStates, line, textFile2);
 	      }
 	      
 	      for (int i = 0; i < numStates; i++) {
@@ -198,10 +198,12 @@ POMDP::Model<MDP::Model> loadModel(string pomdpFile) {
 	    }
 	    
 	    if (token.compare("o") == 0) {
-	      int actionIndex = indexOf(actions, *++tok_iter);
+	      vector<int> actionIndexes = indexesOf(actions, *++tok_iter, numActions);
 	      
-	      if ((actionIndex < 0) || (actionIndex >= numActions)) {
-		throw std::invalid_argument("Action [" + *tok_iter + "] not mapped.");
+	      for (size_t i = 0; i < actionIndexes.size(); i++) {
+		if ((actionIndexes[i] < 0) || (actionIndexes[i] >= numActions)) {
+		  throw std::invalid_argument("Action [" + *tok_iter + "] not mapped.");
+		}
 	      }
 	      
 	      if (!getline(textFile2,line)) {
@@ -217,12 +219,14 @@ POMDP::Model<MDP::Model> loadModel(string pomdpFile) {
 	      } else if (line.compare("identity") == 0) {
 		matrix = buildIndetityMatrix(numStates, numObs);
 	      } else {
-		matrix = buildMatrix(numStates, line, textFile2);
+		matrix = buildMatrix(numStates, numObs, line, textFile2);
 	      }
 	      
-	      for (int i = 0; i < numStates; i++) {
-		for (int j = 0; j < numObs; j++) {
-		  observationProbabilities[i][actionIndex][j] = matrix[i][j];
+	      for (size_t a = 0; a < actionIndexes.size(); a++) {
+		for (int i = 0; i < numStates; i++) {
+		  for (int j = 0; j < numObs; j++) {
+		    observationProbabilities[i][actionIndexes[a]][j] = matrix[i][j];
+		  }
 		}
 	      }
 	      
@@ -300,12 +304,12 @@ vector<int> retrieveIndexes(string token, vector<string> names) {
   return indexes;
 }
 
-double **buildMatrix(int numStates, string firstData, ifstream& textFile) {
+double **buildMatrix(int numLines, int numCols, string firstData, ifstream& textFile) {
   double **matrix;
   string lineText = firstData;
   int lineNumber = -1;
   
-  matrix = new double*[numStates];
+  matrix = new double*[numLines];
   
   do {
     trim(lineText);
@@ -313,17 +317,17 @@ double **buildMatrix(int numStates, string firstData, ifstream& textFile) {
     if (lineText.size() > 0) {
       vector<string> states = parseToken(lineText);
       
-      if ((int)states.size() == numStates) {
-	matrix[++lineNumber] = new double[numStates];
+      if ((int)states.size() == numCols) {
+	matrix[++lineNumber] = new double[numCols];
 	
-	for (size_t i = 0; i < states.size(); i++) {
+	for (int i = 0; i < numCols; i++) {
 	  matrix[lineNumber][i] = stod(states[i]);
 	}
       } else {
 	throw std::invalid_argument("Invalid amount of values of the line " + lineText + ".");
       }
     }
-  } while (getline(textFile,lineText) && (lineNumber < (numStates - 1)));
+  } while (getline(textFile,lineText) && (lineNumber < (numLines - 1)));
   
   return matrix;
 }
@@ -359,6 +363,7 @@ double **buildIndetityMatrix(int numLines, int numCols) {
 }
 
 int indexOf(vector<string> values, string value) {
+  trim(value);
   value = to_lower_copy<string>(value);
   
   for (size_t i = 0; i < values.size(); i++) {
@@ -368,6 +373,21 @@ int indexOf(vector<string> values, string value) {
   }
   
   return -1;
+}
+
+vector<int> indexesOf(vector<string> values, string value, int num) {
+  vector<int> indexes;
+  trim(value);
+  
+  if (value.compare("*") == 0) {
+    for (int i = 0; i < num; i++) {
+      indexes.push_back(i);
+    }
+  } else {
+    indexes.push_back(indexOf(values, value));
+  }
+  
+  return indexes;
 }
 
 vector<string> parseToken(string token) {
